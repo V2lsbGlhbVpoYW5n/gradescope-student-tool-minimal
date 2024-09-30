@@ -216,6 +216,8 @@ class Gradescope:
         for row in assignments_data.find('tbody').find_all('tr'):
             assignment = {}
             button = row.find('button', {'class': 'js-submitAssignment'})
+            if button is None:
+                continue  # 跳过没有找到按钮的行
             assignment['assignment_id'] = int(button['data-assignment-id'])
             assignment['ready_for_submission'] = button['data-ready-for-submission'] == 'true'
             assignment['url'] = button['data-post-url']
