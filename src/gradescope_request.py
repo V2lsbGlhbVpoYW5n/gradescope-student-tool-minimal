@@ -49,27 +49,6 @@ class Assignment:
         '''Returns the URL to download the grades for the assignment.'''
         return urljoin(Constants.BASE_URL, self.url + '/scores.csv')
 
-
-@dataclass
-class Submission:
-    '''Represents a submission in Gradescope.'''
-    course_id: int
-    assignment_id: int
-    member_id: int
-    submission_id: int
-    created_at: str
-    score: int
-    url: str
-
-    def get_url(self) -> str:
-        '''Returns the full URL of the submission.'''
-        return urljoin(Constants.BASE_URL, self.url)
-
-    def get_file_url(self) -> str:
-        '''Returns the URL to download the submission file.'''
-        return urljoin(Constants.BASE_URL, self.url + '.zip')
-
-
 class GradescopeError(Exception):
     def __init__(self, msg: str):
         self.msg = msg
@@ -202,7 +181,7 @@ class Gradescope:
                                  } courses for the current term.')
         return term_courses
 
-    def get_assignments(self, course):
+    def get_assignments(self, course, number_of_assignments = -1):
         if not self.logged_in:
             raise NotLoggedInError
 
@@ -227,13 +206,16 @@ class Gradescope:
             assignment['released_time'] = row.find('time', {'class': 'submissionTimeChart--releaseDate'})['datetime']
             assignment['due_time'] = row.find('time', {'class': 'submissionTimeChart--dueDate'})['datetime']
             assignments.append(assignment)
+        if number_of_assignments != -1:
+            assignments = assignments[:number_of_assignments]
         return assignments
 
-    def get_past_submissions(self, course, assignment):
-        pass
-
-    def get_assignment_grades(self, course, assignment):
-        pass
+    def get_assignment_grades(self, assignment):
+        match = re.match(r'(\d+\.\d+)\s*/\s*(\d+\.\d+)', assignment.submission_status)
+        if match:
+            return float(match.group(1)), float(match.group(2))
+        else:
+            return None, None
 
     def download_file(self, url, path):
         pass
